@@ -113,7 +113,7 @@ pub async fn process_transactions() -> Vec<RewardEvent> {
         rewards.push(event);
     }
 
-    return rewards;
+    rewards
 }
 
 pub fn range_filter(date: &NaiveDateTime, year: i32) -> bool {
@@ -133,7 +133,7 @@ pub fn current_balance(events: &Vec<RewardEvent>) -> U256 {
         }
     }
 
-    return sum;
+    sum
 }
 
 pub fn total_earnings(events: &Vec<RewardEvent>) -> f64 {
@@ -148,7 +148,7 @@ pub fn total_earnings(events: &Vec<RewardEvent>) -> f64 {
             Outgoing { .. } => {}
         }
     }
-    return sum;
+    sum
 }
 
 pub fn unliquidated(events: &Vec<RewardEvent>) -> f64 {
@@ -163,5 +163,5 @@ pub fn unliquidated(events: &Vec<RewardEvent>) -> f64 {
             Outgoing { reward, .. } => sum -= reward.fiat,
         }
     }
-    return sum;
+    sum
 }
