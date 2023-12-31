@@ -67,7 +67,6 @@ pub async fn process_transactions() -> Vec<RewardEvent> {
         rewards.push(event);
     }
 
-    // Transactions
     for tx in transactions(&client, consensus_addr).await {
         if tx.from.value().unwrap().eq(&consensus_addr) {
             let event = Outgoing {

@@ -34,35 +34,55 @@ async fn proc() {
         .collect();
 
     let mut execution_writer =
-        csv::Writer::from_path(format!("report-execution-{}.csv", year)).unwrap();
+        csv::Writer::from_path(format!("Execution Rewards {}.csv", year)).unwrap();
     let mut consensus_writer =
-        csv::Writer::from_path(format!("report-consensus-{}.csv", year)).unwrap();
-    let mut fees_writer = csv::Writer::from_path(format!("report-fees-{}.csv", year)).unwrap();
+        csv::Writer::from_path(format!("Consensus Rewards {}.csv", year)).unwrap();
+    let mut fees_writer = csv::Writer::from_path(format!("Fees {}.csv", year)).unwrap();
 
     let header = ["Date", "Block", "Type", "ID", "ETH", "ETH_EUR_Price", "EUR"];
     execution_writer.write_record(header).unwrap();
     consensus_writer.write_record(header).unwrap();
     fees_writer.write_record(header).unwrap();
 
+    let mut execution_rows = 1;
+    let mut consensus_rows = 1;
+    let mut fees_rows = 1;
     for r in filtered_events {
         match r {
             RewardEvent::Withdrawal { reward } => {
                 write_reward(&mut consensus_writer, reward, "Withdrawal");
+                consensus_rows += 1;
             }
             RewardEvent::ProducedBlock { reward } => {
                 write_reward(&mut execution_writer, reward, "Block");
+                execution_rows += 1;
             }
             RewardEvent::MevReward { reward } => {
                 write_reward(&mut execution_writer, reward, "MevReward");
+                execution_rows += 1;
             }
             RewardEvent::MevRewardInternal { reward } => {
                 write_reward(&mut execution_writer, reward, "MevRewardInternal");
+                execution_rows += 1;
             }
             RewardEvent::Outgoing { reward, fee } => {
                 write_fee(&mut fees_writer, reward, *fee, "Fee");
+                fees_rows += 1;
             }
         }
     }
+
+    execution_writer
+        .write_record(footer(execution_rows))
+        .unwrap();
+    consensus_writer
+        .write_record(footer(consensus_rows))
+        .unwrap();
+    fees_writer.write_record(footer(fees_rows)).unwrap();
+
+    execution_writer.flush().unwrap();
+    consensus_writer.flush().unwrap();
+    fees_writer.flush().unwrap();
 
     println!(
         "Current Balance: {} ETH",
@@ -74,6 +94,20 @@ async fn proc() {
         total_earnings(&events),
         unliquidated(&events),
     );
+}
+
+fn footer(rows: i32) -> [&'static str; 7] {
+    let fee_eth = format!("=SUM(E2:E{})", rows);
+    let fee_eur = format!("=SUM(G2:G{})", rows);
+    [
+        "",
+        "",
+        "",
+        "",
+        Box::leak(fee_eth.into_boxed_str()),
+        "",
+        Box::leak(fee_eur.into_boxed_str()),
+    ]
 }
 
 fn write_fee(fees_writer: &mut Writer<File>, reward: &Reward, fee: U256, type_name: &str) {
