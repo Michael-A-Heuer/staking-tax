@@ -21,6 +21,8 @@ pub async fn internal_transactions(
     client: &Client,
     address: ethers::types::Address,
 ) -> Vec<InternalTransaction> {
+    println!("Querying internal txns for address {}", address);
+
     client
         .get_internal_transactions(ByAddress(address), None)
         .await
@@ -31,10 +33,14 @@ pub async fn transactions(
     client: &Client,
     address: ethers::types::Address,
 ) -> Vec<NormalTransaction> {
+    println!("Querying txns for address {}", address);
+
     client.get_transactions(&address, None).await.unwrap()
 }
 
 pub async fn produced_blocks(client: &Client, address: ethers::types::Address) -> Vec<MinedBlock> {
+    println!("Querying produced blocks for address {}", address);
+
     client
         .get_mined_blocks(&address, Some(BlockType::CanonicalBlocks), None)
         .await
@@ -45,6 +51,8 @@ pub async fn beacon_withdrawal_transactions(
     client: &Client,
     address: ethers::types::Address,
 ) -> Vec<BeaconWithdrawalTransaction> {
+    println!("Querying beacon withdrawals for address {}", address);
+
     client
         .get_beacon_withdrawal_transactions(&address, None)
         .await

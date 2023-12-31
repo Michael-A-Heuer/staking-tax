@@ -1,7 +1,7 @@
 use crate::conversion::fetch_ethereum_price;
 use async_throttle::RateLimiter;
 use chrono::NaiveDateTime;
-use ethers::types::U256;
+use ethers::types::{U256, U64};
 use ethers::utils::format_ether;
 use std::sync::Arc;
 
@@ -11,26 +11,38 @@ pub enum RewardEvent {
     ProducedBlock { reward: Reward },
     MevReward { reward: Reward },
     MevRewardInternal { reward: Reward },
-    Outgoing { reward: Reward, gas: U256 },
+    Outgoing { reward: Reward, fee: U256 },
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Reward {
+    pub block: U64,
+    pub id: String,
     pub date: NaiveDateTime,
     pub amount: U256,
+    pub price: f64,
     pub fiat: f64,
 }
 impl Eq for Reward {}
 
 impl Reward {
-    pub async fn new(timestamp: String, amount: U256, limiter: Arc<RateLimiter>) -> Self {
+    pub async fn new(
+        block: U64,
+        id: String,
+        timestamp: String,
+        amount: U256,
+        limiter: Arc<RateLimiter>,
+    ) -> Self {
         let unix_time = timestamp.parse::<i64>().unwrap();
         let date = NaiveDateTime::from_timestamp_opt(unix_time, 0).unwrap();
         let price = fetch_ethereum_price(&date, limiter.clone()).await.unwrap();
 
         Reward {
-            date: NaiveDateTime::from_timestamp_opt(unix_time, 0).unwrap(),
-            amount: amount,
+            block,
+            id,
+            date,
+            amount,
+            price,
             fiat: format_ether(amount).parse::<f64>().unwrap() * price,
         }
     }
@@ -43,7 +55,7 @@ impl Ord for RewardEvent {
             RewardEvent::Withdrawal { reward } => reward.date,
             RewardEvent::MevReward { reward } => reward.date,
             RewardEvent::MevRewardInternal { reward } => reward.date,
-            RewardEvent::Outgoing { reward, gas: _gas } => reward.date,
+            RewardEvent::Outgoing { reward, fee: _gas } => reward.date,
         };
 
         let other_date = match other {
@@ -51,7 +63,7 @@ impl Ord for RewardEvent {
             RewardEvent::Withdrawal { reward } => reward.date,
             RewardEvent::MevReward { reward } => reward.date,
             RewardEvent::MevRewardInternal { reward } => reward.date,
-            RewardEvent::Outgoing { reward, gas: _gas } => reward.date,
+            RewardEvent::Outgoing { reward, fee: _gas } => reward.date,
         };
 
         return date.cmp(&other_date);

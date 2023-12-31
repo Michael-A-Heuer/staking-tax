@@ -1,9 +1,7 @@
 // https://api.coingecko.com/api/v3/coins/ethereum/history?date=30-12-2022
 
 use chrono::NaiveDateTime;
-use reqwest;
 use serde::Deserialize;
-use serde_json;
 use std::collections::HashMap;
 use std::fs::File;
 use std::io::{Read, Write};
@@ -110,6 +108,7 @@ async fn query_ethereum_price_throttled(
     }
 }
 async fn query_ethereum_price(date: &str) -> Result<f64, Box<dyn Error>> {
+    println!("Querying ETH price for date {}", date);
     dotenv().ok();
 
     let url = match dotenv::var("COINGECKO_API_KEY") {
@@ -139,15 +138,13 @@ async fn query_ethereum_price(date: &str) -> Result<f64, Box<dyn Error>> {
 }
 
 pub fn coingecko_rate_limiter() -> RateLimiter {
-    let duration = match dotenv::var("COINGECKO_API_KEY") {
-        Ok(_) => std::time::Duration::from_secs(4),
-        Err(_) => std::time::Duration::from_secs(12),
+    let calls_per_minute = match dotenv::var("COINGECKO_API_KEY") {
+        Ok(_) => 30,
+        Err(_) => 5,
     };
-    println!(
-        "CoinGecko Rate-limit: {} calls / min",
-        60 / duration.as_secs()
-    );
+    println!("CoinGecko Rate-limit: {} calls / min", calls_per_minute);
 
+    let duration = std::time::Duration::from_secs(60 / calls_per_minute);
     RateLimiter::new(duration)
 }
 
