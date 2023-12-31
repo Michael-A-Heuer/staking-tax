@@ -44,7 +44,7 @@ pub async fn process_transactions() -> Vec<RewardEvent> {
             RewardEvent::MevReward {
                 reward: Reward::new(
                     tx.block_number.as_number().unwrap(),
-                    tx.hash.value().unwrap().to_string(),
+                    format!("{:?}", tx.hash.value().unwrap()),
                     tx.time_stamp,
                     tx.value,
                     limiter.clone(),
@@ -55,7 +55,7 @@ pub async fn process_transactions() -> Vec<RewardEvent> {
             Outgoing {
                 reward: Reward::new(
                     tx.block_number.as_number().unwrap(),
-                    tx.hash.value().unwrap().to_string(),
+                    format!("{:?}", tx.hash.value().unwrap()),
                     tx.time_stamp,
                     tx.value,
                     limiter.clone(),
@@ -72,7 +72,7 @@ pub async fn process_transactions() -> Vec<RewardEvent> {
             let event = Outgoing {
                 reward: Reward::new(
                     tx.block_number.as_number().unwrap(),
-                    tx.hash.value().unwrap().to_string(),
+                    format!("{:?}", tx.hash.value().unwrap()),
                     tx.time_stamp,
                     tx.value,
                     limiter.clone(),
@@ -89,7 +89,7 @@ pub async fn process_transactions() -> Vec<RewardEvent> {
         let event = RewardEvent::MevRewardInternal {
             reward: Reward::new(
                 tx.block_number.as_number().unwrap(),
-                tx.hash.to_string(),
+                format!("{:?}", tx.hash),
                 tx.time_stamp,
                 tx.value,
                 limiter.clone(),
